@@ -1,851 +1,658 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>木木的俄罗斯方块</title>
-    <style>
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #2980b9;
-            --background-color: #2c3e50;
-            --text-color: #ecf0f1;
-            --border-color: #1a252f;
-            --tetromino-i: #00bcd4;
-            --tetromino-j: #2196f3;
-            --tetromino-l: #ff9800;
-            --tetromino-o: #ffeb3b;
-            --tetromino-s: #4caf50;
-            --tetromino-t: #9c27b0;
-            --tetromino-z: #f44336;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        h1 {
-            margin: 20px 0;
-            font-size: 2.5rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            color: var(--primary-color);
-        }
-
-        .game-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            max-width: 1000px;
-            width: 100%;
-        }
-
-        .game-board {
-            border: 3px solid var(--border-color);
-            border-radius: 5px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            background-color: rgba(0, 0, 0, 0.2);
-        }
-
-        .info-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            min-width: 200px;
-        }
-
-        .panel {
-            background-color: rgba(0, 0, 0, 0.2);
-            border: 2px solid var(--border-color);
-            border-radius: 5px;
-            padding: 15px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .panel h2 {
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-            color: var(--primary-color);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 5px;
-        }
-
-        .score-display {
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-align: center;
-            margin: 10px 0;
-        }
-
-        .next-piece {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .control-row {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 15px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        button:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        .mobile-controls {
-            display: none;
-            margin-top: 20px;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        .mobile-controls-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 5px;
-        }
-
-        .mobile-btn {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .mobile-btn.up {
-            grid-column: 2;
-            grid-row: 1;
-        }
-
-        .mobile-btn.left {
-            grid-column: 1;
-            grid-row: 2;
-        }
-
-        .mobile-btn.down {
-            grid-column: 2;
-            grid-row: 3;
-        }
-
-        .mobile-btn.right {
-            grid-column: 3;
-            grid-row: 2;
-        }
-
-        .mobile-btn.rotate {
-            grid-column: 3;
-            grid-row: 1;
-        }
-
-        .mobile-btn.drop {
-            grid-column: 3;
-            grid-row: 3;
-        }
-
-        .game-over {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            border-radius: 5px;
-        }
-
-        .game-over h2 {
-            font-size: 2rem;
-            color: #e74c3c;
-            margin-bottom: 20px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .settings {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .settings-content {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .setting-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        label {
-            font-size: 0.9rem;
-            color: var(--text-color);
-        }
-
-        select, input {
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid var(--border-color);
-            background-color: rgba(0, 0, 0, 0.2);
-            color: var(--text-color);
-        }
-
-        @media (max-width: 768px) {
-            .mobile-controls {
-                display: block;
-            }
-            
-            .controls .control-row:not(:first-child) {
-                display: none;
-            }
-            
-            .game-container {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .info-panel {
-                width: 100%;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-around;
-            }
-            
-            .panel {
-                min-width: 150px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            .panel {
-                min-width: 120px;
-                padding: 10px;
-            }
-            
-            .next-piece {
-                width: 80px;
-                height: 80px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>政治人物2048 - 合成川普!</title>
+<style>
+body {
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #002366, #BF0A30, #FFFFFF);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    color: white;
+    overflow-x: hidden;
+}
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+h1 {
+    font-size: 40px;
+    margin: 0;
+    padding: 20px 0;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+.subtitle {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: white;
+    font-style: italic;
+}
+.game-container {
+    width: 460px;
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    border: 3px solid #BF0A30;
+    position: relative;
+}
+.score-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-weight: bold;
+    font-size: 18px;
+}
+.score-box {
+    background-color: #002366;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    min-width: 100px;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, 100px);
+    grid-template-rows: repeat(4, 100px);
+    gap: 10px;
+    background-color: #BBBBBB;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+.cell {
+    width: 100px;
+    height: 100px;
+    background-color: #EEEEEE;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 5px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+.politician-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+    margin-bottom: 5px;
+    transition: all 0.3s;
+}
+/* 为每个政治人物设置独特颜色 */
+.pelosi { background-color: #5DADE2; }
+.schumer { background-color: #3498DB; }
+.mcconnell { background-color: #2874A6; }
+.pence { background-color: #154360; }
+.harris { background-color: #1F618D; }
+.biden { background-color: #BF0A30; }
+.desantis { background-color: #85C1E9; }
+.blinken { background-color: #5DADE2; }
+.greene { background-color: #3498DB; }
+.cruz { background-color: #2874A6; }
+.trump { 
+    background-color: gold; 
+    color: #BF0A30; 
+    font-size: 14px;
+    animation: trumpGlow 2s infinite alternate;
+}
+@keyframes trumpGlow {
+    from { box-shadow: 0 0 10px gold; }
+    to { box-shadow: 0 0 20px gold, 0 0 30px gold; }
+}
+.game-message {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 35, 102, 0.9);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+    animation: fadeIn 0.5s;
+    padding: 20px;
+    text-align: center;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.game-message button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 20px;
+    background-color: #BF0A30;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.game-message button:hover {
+    background-color: #8A0A2C;
+    transform: scale(1.05);
+}
+.instructions {
+    margin-top: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+    border-radius: 5px;
+    text-align: left;
+    border-left: 5px solid #BF0A30;
+    color: #333;
+}
+.instructions h3 {
+    margin-top: 0;
+    color: #002366;
+}
+.key {
+    display: inline-block;
+    background-color: #002366;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin: 0 2px;
+    font-family: monospace;
+}
+.maga-flag {
+    display: inline-block;
+    width: 30px;
+    height: 20px;
+    background: linear-gradient(to right, #002366 33%, white 33%, white 66%, #BF0A30 66%);
+    margin: 0 5px;
+    vertical-align: middle;
+}
+.trump-hat {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-15deg);
+    width: 50px;
+    height: 40px;
+    background-color: red;
+    border-radius: 50% 50% 0 0;
+    z-index: 10;
+}
+.trump-hat:before {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background-color: red;
+}
+.trump-hair {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    background-color: #FFD700;
+    border-radius: 50% 50% 0 0;
+    z-index: 5;
+}
+</style>
 </head>
 <body>
-    <h1>木木的俄罗斯方块</h1>
-    
-    <div class="game-container">
-        <canvas id="board" class="game-board" width="300" height="600"></canvas>
-        
-        <div class="info-panel">
-            <div class="panel">
-                <h2>分数</h2>
-                <div class="score-display" id="score">0</div>
-                <div class="score-display" id="level">等级: 1</div>
-                <div class="score-display" id="lines">行数: 0</div>
-            </div>
-            
-            <div class="panel">
-                <h2>下一个方块</h2>
-                <div class="next-piece">
-                    <canvas id="next" width="120" height="120"></canvas>
-                </div>
-            </div>
-            
-            <div class="panel controls">
-                <h2>控制</h2>
-                <div class="control-row">
-                    <button id="startBtn">开始游戏</button>
-                    <button id="pauseBtn">暂停</button>
-                </div>
-                <div class="control-row">
-                    <button id="leftBtn">← 左移</button>
-                    <button id="rightBtn">→ 右移</button>
-                </div>
-                <div class="control-row">
-                    <button id="rotateBtn">↑ 旋转</button>
-                    <button id="downBtn">↓ 加速下落</button>
-                </div>
-                <div class="control-row">
-                    <button id="dropBtn">空格 直接落下</button>
-                </div>
-            </div>
-        </div>
+<h1>政治人物2048 <span class="maga-flag"></span></h1>
+<div class="subtitle">合并政治人物，最终合成川普！</div>
+<div class="game-container">
+    <div class="score-container">
+        <div class="score-box">分数: <span id="score">0</span></div>
+        <div class="score-box">最佳: <span id="best-score">0</span></div>
     </div>
-    
-    <div class="mobile-controls">
-        <div class="mobile-controls-grid">
-            <button class="mobile-btn up" id="mobileUp">↑</button>
-            <button class="mobile-btn left" id="mobileLeft">←</button>
-            <button class="mobile-btn down" id="mobileDown">↓</button>
-            <button class="mobile-btn right" id="mobileRight">→</button>
-            <button class="mobile-btn rotate" id="mobileRotate">↻</button>
-            <button class="mobile-btn drop" id="mobileDrop">↓</button>
-        </div>
+    <div class="grid" id="grid">
+        <!-- 游戏格子将通过JS动态生成 -->
     </div>
-    
-    <div class="panel settings">
-        <h2>设置</h2>
-        <div class="settings-content">
-            <div class="setting-group">
-                <label for="difficulty">难度</label>
-                <select id="difficulty">
-                    <option value="easy">简单</option>
-                    <option value="medium" selected>中等</option>
-                    <option value="hard">困难</option>
-                    <option value="expert">专家</option>
-                </select>
-            </div>
-            <div class="setting-group">
-                <label for="gridSize">网格大小</label>
-                <select id="gridSize">
-                    <option value="small">小 (10x20)</option>
-                    <option value="medium" selected>中 (12x24)</option>
-                    <option value="large">大 (15x30)</option>
-                </select>
-            </div>
-            <div class="setting-group">
-                <label for="theme">主题</label>
-                <select id="theme">
-                    <option value="classic">经典</option>
-                    <option value="dark" selected>暗黑</option>
-                    <option value="light">明亮</option>
-                    <option value="retro">复古</option>
-                </select>
-            </div>
-        </div>
+    <div class="game-message" id="game-message">
+        <p id="message-text"></p>
+        <button id="restart-button">再来一局</button>
     </div>
+    <div class="instructions">
+        <h3>游戏规则:</h3>
+        <p>使用 <span class="key">↑</span> <span class="key">↓</span> <span class="key">←</span> <span class="key">→</span> 方向键移动方块。</p>
+        <p>当两个相同的政治人物相撞时，他们会合并成更高级的政治人物！</p>
+        <p><strong>合并顺序：</strong></p>
+        <p>佩洛西 + 佩洛西 → 舒默</p>
+        <p>舒默 + 舒默 → 麦康奈尔</p>
+        <p>麦康奈尔 + 麦康奈尔 → 彭斯</p>
+        <p>彭斯 + 彭斯 → 哈里斯</p>
+        <p>哈里斯 + 哈里斯 → 拜登</p>
+        <p>拜登 + 拜登 → 川普</p>
+        <p><strong>特殊人物：</strong>德桑蒂斯、布林肯、格林和克鲁兹只能与同人物合并，不会升级</p>
+        <p>最终目标：合成 <strong>川普</strong>！</p>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const grid = document.getElementById('grid');
+    const scoreDisplay = document.getElementById('score');
+    const bestScoreDisplay = document.getElementById('best-score');
+    const gameMessage = document.getElementById('game-message');
+    const messageText = document.getElementById('message-text');
+    const restartButton = document.getElementById('restart-button');
+    
+    let board = [];
+    let score = 0;
+    let bestScore = localStorage.getItem('bestScore') || 0;
+    bestScoreDisplay.textContent = bestScore;
+    let gameOver = false;
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 游戏常量
-            const COLS = 12;
-            const ROWS = 24;
-            const BLOCK_SIZE = 25;
-            const NEXT_BLOCK_SIZE = 20;
-            
-            // 游戏变量
-            let canvas = document.getElementById('board');
-            let ctx = canvas.getContext('2d');
-            let nextCanvas = document.getElementById('next');
-            let nextCtx = nextCanvas.getContext('2d');
-            let scoreElement = document.getElementById('score');
-            let levelElement = document.getElementById('level');
-            let linesElement = document.getElementById('lines');
-            
-            // 设置画布大小
-            canvas.width = COLS * BLOCK_SIZE;
-            canvas.height = ROWS * BLOCK_SIZE;
-            nextCanvas.width = 6 * NEXT_BLOCK_SIZE;
-            nextCanvas.height = 6 * NEXT_BLOCK_SIZE;
-            
-            // 游戏状态
-            let score = 0;
-            let level = 1;
-            let lines = 0;
-            let board = createBoard();
-            let gameOver = false;
-            let isPaused = false;
-            let dropCounter = 0;
-            let dropInterval = 1000;
-            let lastTime = 0;
-            let animationId = null;
-            
-            // 当前方块和下一个方块
-            let piece = null;
-            let nextPiece = null;
-            
-            // 方块形状和颜色
-            const PIECES = [
-                { shape: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], color: 'var(--tetromino-i)' }, // I
-                { shape: [[2, 0, 0], [2, 2, 2], [0, 0, 0]], color: 'var(--tetromino-j)' }, // J
-                { shape: [[0, 0, 3], [3, 3, 3], [0, 0, 0]], color: 'var(--tetromino-l)' }, // L
-                { shape: [[4, 4], [4, 4]], color: 'var(--tetromino-o)' }, // O
-                { shape: [[0, 5, 5], [5, 5, 0], [0, 0, 0]], color: 'var(--tetromino-s)' }, // S
-                { shape: [[0, 6, 0], [6, 6, 6], [0, 0, 0]], color: 'var(--tetromino-t)' }, // T
-                { shape: [[7, 7, 0], [0, 7, 7], [0, 0, 0]], color: 'var(--tetromino-z)' }  // Z
-            ];
-            
-            // 创建游戏板
-            function createBoard() {
-                return Array.from({length: ROWS}, () => Array(COLS).fill(0));
+    // 政治人物数据
+    const politicians = [
+        { id: 'pelosi',
+          name: "佩洛西",
+          image: "https://p3-sdbk2-media.byteimg.com/tos-cn-i-xv4ileqgde/4ffa15a56aa44659a891aeb38d4fa71d~tplv-xv4ileqgde-image.image",
+          next: 'schumer'
+        },
+        { id: 'schumer',
+          name: "舒默",
+          image: "https://p3-search.byteimg.com/obj/labis/b5616b94f05fd306cbb9700bcb5c80e7",
+          next: 'mcconnell'
+        },
+        { id: 'mcconnell',
+          name: "麦康奈尔",
+          image: "https://p3-sdbk2-media.byteimg.com/tos-cn-i-xv4ileqgde/2c07e29f0352498caac70d934fd7e338~tplv-xv4ileqgde-image.image",
+          next: 'pence'
+        },
+        { id: 'pence',
+          name: "彭斯",
+          image: "https://p3-search.byteimg.com/obj/labis/88dcff8fbf07af0ed60fad6c19586512",
+          next: 'harris'
+        },
+        { id: 'harris',
+          name: "哈里斯",
+          image: "https://p3-search.byteimg.com/obj/labis/1ccf60152203e5dc8fb1e700e66a0f42",
+          next: 'biden'
+        },
+        { id: 'biden',
+          name: "拜登",
+          image: "https://p3-sdbk2-media.byteimg.com/tos-cn-i-xv4ileqgde/80b3cf011de44a19897b846f82354869~tplv-xv4ileqgde-image.image",
+          next: 'trump'
+        },
+        { id: 'trump',
+          name: "川普",
+          image: "https://p3-sdbk2-media.byteimg.com/tos-cn-i-xv4ileqgde/05cc41d6f0c046539e160765f739b670~tplv-xv4ileqgde-image.image",
+          next: null
+        },
+        // 特殊人物 - 只能与同人物合并，不会升级
+        { id: 'desantis',
+          name: "德桑蒂斯",
+          image: "https://p3-search.byteimg.com/obj/labis/885d4d493fee759011e859d2e18aaec6",
+          next: null
+        },
+        { id: 'blinken',
+          name: "布林肯",
+          image: "https://p3-search.byteimg.com/obj/labis/144be94b7f40fa425b650dd8521f34af",
+          next: null
+        },
+        { id: 'greene',
+          name: "格林",
+          image: "https://p3-search.byteimg.com/obj/labis/006aa14aa2d5966ae75bf2d57861c0ca",
+          next: null
+        },
+        { id: 'cruz',
+          name: "克鲁兹",
+          image: "https://p3-sdbk2-media.byteimg.com/tos-cn-i-xv4ileqgde/e3a0bc8ec8594c118c363323f18aa807~tplv-xv4ileqgde-image.image",
+          next: null
+        }
+    ];
+
+    // 初始化游戏
+    function initGame() {
+        board = [
+            [null, null, null, null],
+            [null, null, null, null],
+            [null, null, null, null],
+            [null, null, null, null]
+        ];
+        score = 0;
+        gameOver = false;
+        scoreDisplay.textContent = score;
+        gameMessage.style.display = 'none';
+        
+        // 清空网格
+        grid.innerHTML = '';
+        
+        // 创建16个格子
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `cell-${row}-${col}`;
+                grid.appendChild(cell);
             }
-            
-            // 创建随机方块
-            function createPiece() {
-                const randomIndex = Math.floor(Math.random() * PIECES.length);
-                const piece = JSON.parse(JSON.stringify(PIECES[randomIndex]));
+        }
+        
+        // 添加两个初始方块
+        addRandomTile();
+        addRandomTile();
+        updateBoard();
+    }
+
+    // 添加随机方块
+    function addRandomTile() {
+        if (isBoardFull()) return;
+        
+        let row, col;
+        do {
+            row = Math.floor(Math.random() * 4);
+            col = Math.floor(Math.random() * 4);
+        } while (board[row][col] !== null);
+        
+        // 随机选择一个初始人物(佩洛西或德桑蒂斯)
+        const starterPoliticians = ['pelosi', 'desantis', 'blinken', 'greene', 'cruz'];
+        const randomPoliticianId = starterPoliticians[Math.floor(Math.random() * starterPoliticians.length)];
+        board[row][col] = politicians.find(p => p.id === randomPoliticianId);
+    }
+
+    // 更新棋盘显示
+    function updateBoard() {
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                const cell = document.getElementById(`cell-${row}-${col}`);
+                const politician = board[row][col];
                 
-                // 设置初始位置 (居中)
-                piece.x = Math.floor(COLS / 2) - Math.floor(piece.shape[0].length / 2);
-                piece.y = 0;
+                // 清空单元格内容
+                cell.innerHTML = '';
+                cell.className = 'cell';
                 
-                return piece;
-            }
-            
-            // 绘制游戏板
-            function drawBoard() {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (!politician) continue;
                 
-                // 绘制网格
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-                ctx.lineWidth = 0.5;
+                // 添加政治人物头像和名称
+                const img = document.createElement('img');
+                img.src = politician.image;
+                img.alt = politician.name;
+                img.className = 'politician-image';
                 
-                for (let i = 0; i < COLS; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(i * BLOCK_SIZE, 0);
-                    ctx.lineTo(i * BLOCK_SIZE, ROWS * BLOCK_SIZE);
-                    ctx.stroke();
-                }
-                
-                for (let i = 0; i < ROWS; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, i * BLOCK_SIZE);
-                    ctx.lineTo(COLS * BLOCK_SIZE, i * BLOCK_SIZE);
-                    ctx.stroke();
-                }
-                
-                // 绘制已固定的方块
-                board.forEach((row, y) => {
-                    row.forEach((value, x) => {
-                        if (value !== 0) {
-                            ctx.fillStyle = getColorForValue(value);
-                            ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-                            
-                            // 添加方块边框效果
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                            ctx.lineWidth = 1;
-                            ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-                        }
-                    });
-                });
-            }
-            
-            // 绘制当前方块
-            function drawPiece() {
-                piece.shape.forEach((row, y) => {
-                    row.forEach((value, x) => {
-                        if (value !== 0) {
-                            ctx.fillStyle = piece.color;
-                            ctx.fillRect(
-                                (piece.x + x) * BLOCK_SIZE,
-                                (piece.y + y) * BLOCK_SIZE,
-                                BLOCK_SIZE, BLOCK_SIZE
-                            );
-                            
-                            // 添加方块边框效果
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                            ctx.lineWidth = 1;
-                            ctx.strokeRect(
-                                (piece.x + x) * BLOCK_SIZE,
-                                (piece.y + y) * BLOCK_SIZE,
-                                BLOCK_SIZE, BLOCK_SIZE
-                            );
-                        }
-                    });
-                });
-            }
-            
-            // 绘制下一个方块
-            function drawNextPiece() {
-                nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-                
-                if (!nextPiece) return;
-                
-                // 居中显示
-                const offsetX = (nextCanvas.width / NEXT_BLOCK_SIZE - nextPiece.shape[0].length) / 2;
-                const offsetY = (nextCanvas.height / NEXT_BLOCK_SIZE - nextPiece.shape.length) / 2;
-                
-                nextPiece.shape.forEach((row, y) => {
-                    row.forEach((value, x) => {
-                        if (value !== 0) {
-                            nextCtx.fillStyle = nextPiece.color;
-                            nextCtx.fillRect(
-                                (offsetX + x) * NEXT_BLOCK_SIZE,
-                                (offsetY + y) * NEXT_BLOCK_SIZE,
-                                NEXT_BLOCK_SIZE, NEXT_BLOCK_SIZE
-                            );
-                            
-                            // 添加方块边框效果
-                            nextCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                            nextCtx.lineWidth = 1;
-                            nextCtx.strokeRect(
-                                (offsetX + x) * NEXT_BLOCK_SIZE,
-                                (offsetY + y) * NEXT_BLOCK_SIZE,
-                                NEXT_BLOCK_SIZE, NEXT_BLOCK_SIZE
-                            );
-                        }
-                    });
-                });
-            }
-            
-            // 根据数值获取颜色
-            function getColorForValue(value) {
-                switch(value) {
-                    case 1: return 'var(--tetromino-i)';
-                    case 2: return 'var(--tetromino-j)';
-                    case 3: return 'var(--tetromino-l)';
-                    case 4: return 'var(--tetromino-o)';
-                    case 5: return 'var(--tetromino-s)';
-                    case 6: return 'var(--tetromino-t)';
-                    case 7: return 'var(--tetromino-z)';
-                    default: return 'black';
-                }
-            }
-            
-            // 碰撞检测
-            function collide() {
-                for (let y = 0; y < piece.shape.length; y++) {
-                    for (let x = 0; x < piece.shape[y].length; x++) {
-                        if (piece.shape[y][x] !== 0 &&
-                            (board[y + piece.y] === undefined ||
-                             board[y + piece.y][x + piece.x] === undefined ||
-                             board[y + piece.y][x + piece.x] !== 0)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
-            
-            // 旋转方块
-            function rotate() {
-                const originalShape = piece.shape;
-                
-                // 转置矩阵
-                for (let y = 0; y < piece.shape.length; y++) {
-                    for (let x = 0; x < y; x++) {
-                        [piece.shape[x][y], piece.shape[y][x]] = [piece.shape[y][x], piece.shape[x][y]];
-                    }
-                }
-                
-                // 反转每一行
-                piece.shape.forEach(row => row.reverse());
-                
-                // 如果旋转后发生碰撞，则恢复原状
-                if (collide()) {
-                    piece.shape = originalShape;
-                }
-            }
-            
-            // 移动方块
-            function movePiece(direction) {
-                switch(direction) {
-                    case 'left':
-                        piece.x--;
-                        if (collide()) piece.x++;
-                        break;
-                    case 'right':
-                        piece.x++;
-                        if (collide()) piece.x--;
-                        break;
-                    case 'down':
-                        piece.y++;
-                        if (collide()) {
-                            piece.y--;
-                            mergePiece();
-                            removeLines();
-                            resetPiece();
-                            
-                            // 检查游戏是否结束
-                            if (collide()) {
-                                gameOver = true;
-                            }
-                        }
-                        dropCounter = 0;
-                        break;
-                }
-            }
-            
-            // 直接落下
-            function hardDrop() {
-                while (!collide()) {
-                    piece.y++;
-                }
-                piece.y--;
-                mergePiece();
-                removeLines();
-                resetPiece();
-                
-                if (collide()) {
-                    gameOver = true;
-                }
-            }
-            
-            // 合并方块到游戏板
-            function mergePiece() {
-                piece.shape.forEach((row, y) => {
-                    row.forEach((value, x) => {
-                        if (value !== 0) {
-                            board[y + piece.y][x + piece.x] = value;
-                        }
-                    });
-                });
-            }
-            
-            // 重置方块
-            function resetPiece() {
-                piece = nextPiece;
-                nextPiece = createPiece();
-                drawNextPiece();
-            }
-            
-            // 移除已填满的行
-            function removeLines() {
-                let linesCleared = 0;
-                
-                outer: for (let y = ROWS - 1; y >= 0; y--) {
-                    for (let x = 0; x < COLS; x++) {
-                        if (board[y][x] === 0) {
-                            continue outer;
-                        }
-                    }
+                // 对川普添加特殊效果
+                if (politician.id === 'trump') {
+                    const hat = document.createElement('div');
+                    hat.className = 'trump-hat';
+                    cell.appendChild(hat);
                     
-                    // 移除该行
-                    const row = board.splice(y, 1)[0].fill(0);
-                    board.unshift(row);
-                    y++; // 检查同一行(现在是新行)
-                    linesCleared++;
+                    const hair = document.createElement('div');
+                    hair.className = 'trump-hair';
+                    cell.appendChild(hair);
+                    
+                    img.style.border = '2px solid gold';
+                    img.style.boxShadow = '0 0 10px gold';
                 }
                 
-                if (linesCleared > 0) {
-                    // 更新分数
-                    updateScore(linesCleared);
-                }
+                cell.appendChild(img);
+                const name = document.createElement('span');
+                name.textContent = politician.name;
+                cell.appendChild(name);
+                
+                // 设置单元格样式
+                cell.classList.add(politician.id);
             }
+        }
+        
+        // 检查游戏是否结束
+        if (isGameOver()) {
+            gameOver = true;
+            messageText.textContent = '游戏结束!\n你没有合成川普!';
+            gameMessage.style.display = 'flex';
+        }
+        
+        // 检查是否获胜
+        if (hasWon()) {
+            gameOver = true;
+            messageText.innerHTML = '你合成了川普!<br>让美国再次伟大!';
+            gameMessage.style.display = 'flex';
             
-            // 更新分数
-            function updateScore(linesCleared) {
-                const linePoints = [0, 40, 100, 300, 1200]; // 0, 1, 2, 3, 4行对应的分数
-                score += linePoints[linesCleared] * level;
-                lines += linesCleared;
-                
-                // 每清除10行升一级
-                const newLevel = Math.floor(lines / 10) + 1;
-                if (newLevel > level) {
-                    level = newLevel;
-                    // 随着等级提高，下落速度加快
-                    dropInterval = Math.max(100, 1000 - (level - 1) * 100);
-                }
-                
-                scoreElement.textContent = score;
-                levelElement.textContent = `等级: ${level}`;
-                linesElement.textContent = `行数: ${lines}`;
-            }
-            
-            // 游戏循环
-            function gameLoop(time = 0) {
-                const deltaTime = time - lastTime;
-                lastTime = time;
-                
-                dropCounter += deltaTime;
-                if (dropCounter > dropInterval) {
-                    movePiece('down');
-                }
-                
-                drawBoard();
-                drawPiece();
-                
-                if (!gameOver && !isPaused) {
-                    animationId = requestAnimationFrame(gameLoop);
-                } else if (gameOver) {
-                    drawGameOver();
-                }
-            }
-            
-            // 绘制游戏结束画面
-            function drawGameOver() {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                ctx.fillStyle = 'white';
-                ctx.font = '30px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('游戏结束!', canvas.width / 2, canvas.height / 2 - 40);
-                
-                ctx.font = '20px Arial';
-                ctx.fillText(`最终分数: ${score}`, canvas.width / 2, canvas.height / 2);
-                ctx.fillText(`等级: ${level}`, canvas.width / 2, canvas.height / 2 + 30);
-                ctx.fillText(`消除行数: ${lines}`, canvas.width / 2, canvas.height / 2 + 60);
-                
-                ctx.font = '16px Arial';
-                ctx.fillText('点击"开始游戏"重新开始', canvas.width / 2, canvas.height / 2 + 100);
-            }
-            
-            // 重置游戏
-            function resetGame() {
-                cancelAnimationFrame(animationId);
-                
-                board = createBoard();
-                score = 0;
-                level = 1;
-                lines = 0;
-                dropInterval = 1000;
-                gameOver = false;
-                isPaused = false;
-                
-                scoreElement.textContent = score;
-                levelElement.textContent = `等级: ${level}`;
-                linesElement.textContent = `行数: ${lines}`;
-                
-                piece = createPiece();
-                nextPiece = createPiece();
-                drawNextPiece();
-                
-                document.getElementById('pauseBtn').textContent = '暂停';
-                
-                lastTime = 0;
-                dropCounter = 0;
-                animationId = requestAnimationFrame(gameLoop);
-            }
-            
-            // 暂停/继续游戏
-            function togglePause() {
-                isPaused = !isPaused;
-                document.getElementById('pauseBtn').textContent = isPaused ? '继续' : '暂停';
-                
-                if (!isPaused && !gameOver) {
-                    lastTime = 0;
-                    dropCounter = 0;
-                    animationId = requestAnimationFrame(gameLoop);
-                }
-            }
-            
-            // 键盘控制
-            function handleKeyDown(e) {
-                if (gameOver) return;
-                
-                switch(e.keyCode) {
-                    case 37: // 左箭头
-                        movePiece('left');
-                        break;
-                    case 39: // 右箭头
-                        movePiece('right');
-                        break;
-                    case 40: // 下箭头
-                        movePiece('down');
-                        break;
-                    case 38: // 上箭头
-                        rotate();
-                        break;
-                    case 32: // 空格
-                        hardDrop();
-                        break;
-                    case 80: // P键
-                        togglePause();
-                        break;
-                }
-            }
-            
-            // 初始化游戏
-            function init() {
-                // 事件监听
-                document.addEventListener('keydown', handleKeyDown);
-                document.getElementById('startBtn').addEventListener('click', resetGame);
-                document.getElementById('pauseBtn').addEventListener('click', togglePause);
-                document.getElementById('leftBtn').addEventListener('click', () => movePiece('left'));
-                document.getElementById('rightBtn').addEventListener('click', () => movePiece('right'));
-                document.getElementById('downBtn').addEventListener('click', () => movePiece('down'));
-                document.getElementById('rotateBtn').addEventListener('click', rotate);
-                document.getElementById('dropBtn').addEventListener('click', hardDrop);
-                
-                // 移动端控制
-                document.getElementById('mobileLeft').addEventListener('click', () => movePiece('left'));
-                document.getElementById('mobileRight').addEventListener('click', () => movePiece('right'));
-                document.getElementById('mobileDown').addEventListener('click', () => movePiece('down'));
-                document.getElementById('mobileUp').addEventListener('click', rotate);
-                document.getElementById('mobileRotate').addEventListener('click', rotate);
-                document.getElementById('mobileDrop').addEventListener('click', hardDrop);
-                
-                // 设置面板
-                document.getElementById('difficulty').addEventListener('change', (e) => {
-                    switch(e.target.value) {
-                        case 'easy':
-                            dropInterval = 1200;
-                            break;
-                        case 'medium':
-                            dropInterval = 1000;
-                            break;
-                        case 'hard':
-                            dropInterval = 700;
-                            break;
-                        case 'expert':
-                            dropInterval = 500;
-                            break;
+            // 添加庆祝效果
+            const fireworks = document.createElement('div');
+            fireworks.style.position = 'absolute';
+            fireworks.style.top = '0';
+            fireworks.style.left = '0';
+            fireworks.style.width = '100%';
+            fireworks.style.height = '100%';
+            fireworks.style.background = 'url(https://media.giphy.com/media/26tknCqiJrBQG6bxC/giphy.gif) center/cover no-repeat';
+            fireworks.style.zIndex = '101';
+            fireworks.style.pointerEvents = 'none';
+            gameMessage.appendChild(fireworks);
+        }
+    }
+
+    // 移动方块
+    function move(direction) {
+        if (gameOver) return;
+        
+        let moved = false;
+        const newBoard = JSON.parse(JSON.stringify(board));
+        
+        // 根据方向处理移动
+        switch (direction) {
+            case 'up':
+                for (let col = 0; col < 4; col++) {
+                    const column = [newBoard[0][col], newBoard[1][col], newBoard[2][col], newBoard[3][col]];
+                    const result = slideAndMerge(column);
+                    for (let row = 0; row < 4; row++) {
+                        if (JSON.stringify(newBoard[row][col]) !== JSON.stringify(result[row])) {
+                            moved = true;
+                        }
+                        newBoard[row][col] = result[row];
                     }
-                });
-                
-                document.getElementById('gridSize').addEventListener('change', (e) => {
-                    // 这里可以添加改变网格大小的逻辑
-                    // 由于需要重新初始化画布，暂时留空
-                });
-                
-                document.getElementById('theme').addEventListener('change', (e) => {
-                    // 这里可以添加改变主题的逻辑
-                    // 可能需要重新定义CSS变量
-                });
-                
-                // 初始化游戏
-                resetGame();
+                }
+                break;
+            case 'down':
+                for (let col = 0; col < 4; col++) {
+                    const column = [newBoard[3][col], newBoard[2][col], newBoard[1][col], newBoard[0][col]];
+                    const result = slideAndMerge(column);
+                    for (let row = 0; row < 4; row++) {
+                        if (JSON.stringify(newBoard[3-row][col]) !== JSON.stringify(result[row])) {
+                            moved = true;
+                        }
+                        newBoard[3-row][col] = result[row];
+                    }
+                }
+                break;
+            case 'left':
+                for (let row = 0; row < 4; row++) {
+                    const result = slideAndMerge(newBoard[row]);
+                    for (let col = 0; col < 4; col++) {
+                        if (JSON.stringify(newBoard[row][col]) !== JSON.stringify(result[col])) {
+                            moved = true;
+                        }
+                        newBoard[row][col] = result[col];
+                    }
+                }
+                break;
+            case 'right':
+                for (let row = 0; row < 4; row++) {
+                    const reversedRow = [...newBoard[row]].reverse();
+                    const result = slideAndMerge(reversedRow);
+                    for (let col = 0; col < 4; col++) {
+                        if (JSON.stringify(newBoard[row][3-col]) !== JSON.stringify(result[col])) {
+                            moved = true;
+                        }
+                        newBoard[row][3-col] = result[col];
+                    }
+                }
+                break;
+        }
+        
+        if (moved) {
+            board = newBoard;
+            addRandomTile();
+            updateBoard();
+            updateScore();
+        }
+    }
+
+    // 滑动和合并行/列
+    function slideAndMerge(line) {
+        // 先移除所有null值
+        let arr = line.filter(val => val !== null);
+        let result = [];
+        
+        for (let i = 0; i < arr.length; i++) {
+            if (i < arr.length - 1 && arr[i] && arr[i+1] && arr[i].id === arr[i+1].id && arr[i].next) {
+                // 找到下一个级别的政治人物
+                const nextPolitician = politicians.find(p => p.id === arr[i].next);
+                result.push(nextPolitician);
+                score += Math.pow(2, politicians.findIndex(p => p.id === arr[i].id) + 1); // 分数计算
+                i++;
+            } else {
+                result.push(arr[i]);
             }
-            
-            // 启动游戏
-            init();
-        });
-    </script>
+        }
+        
+        while (result.length < 4) {
+            result.push(null);
+        }
+        
+        return result;
+    }
+
+    // 更新分数
+    function updateScore() {
+        scoreDisplay.textContent = score;
+        if (score > bestScore) {
+            bestScore = score;
+            bestScoreDisplay.textContent = bestScore;
+            localStorage.setItem('bestScore', bestScore);
+        }
+    }
+
+    // 检查棋盘是否已满
+    function isBoardFull() {
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                if (board[row][col] === null) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // 检查游戏是否结束
+    function isGameOver() {
+        if (!isBoardFull()) return false;
+        
+        // 检查是否有相邻的相同方块
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                const current = board[row][col];
+                if (!current) continue;
+                
+                // 检查右侧
+                if (col < 3 && board[row][col + 1] && board[row][col + 1].id === current.id) {
+                    return false;
+                }
+                
+                // 检查下方
+                if (row < 3 && board[row + 1][col] && board[row + 1][col].id === current.id) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    // 检查是否获胜
+    function hasWon() {
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                if (board[row][col] && board[row][col].id === 'trump') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // 键盘控制
+    document.addEventListener('keydown', (e) => {
+        switch (e.key) {
+            case 'ArrowUp':
+                move('up');
+                break;
+            case 'ArrowDown':
+                move('down');
+                break;
+            case 'ArrowLeft':
+                move('left');
+                break;
+            case 'ArrowRight':
+                move('right');
+                break;
+        }
+    });
+
+    // 重新开始按钮
+    restartButton.addEventListener('click', initGame);
+
+    // 触摸控制
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+    
+    grid.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, false);
+    
+    grid.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].clientX;
+        touchEndY = e.changedTouches[0].clientY;
+        handleSwipe();
+    }, false);
+    
+    function handleSwipe() {
+        const dx = touchEndX - touchStartX;
+        const dy = touchEndY - touchStartY;
+        
+        if (Math.abs(dx) > Math.abs(dy)) {
+            if (dx > 0) {
+                move('right');
+            } else {
+                move('left');
+            }
+        } else {
+            if (dy > 0) {
+                move('down');
+            } else {
+                move('up');
+            }
+        }
+    }
+
+    // 初始化游戏
+    initGame();
+});
+</script>
 </body>
 </html>
